@@ -9,4 +9,4 @@ Then we filtered for cities with a population of more than 200,000 people, and r
 
 Finally, we pulled in median sale price data from Redfin for each city, as well as nationwide from the [Redfin Data Center.](https://www.redfin.com/blog/data-center)
 
-The maps were made in  d3.js and the HTML tables were written from the R script. All data and code is available for reference in this repository.
+The maps were made in  d3.js and the HTML tables were written from the [R script](children_analysis.R). All data and code is available for reference in this repository.
