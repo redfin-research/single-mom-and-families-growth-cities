@@ -215,6 +215,31 @@ tbl <- final_output %>%
 
 setDT(tbl)
 
+tbl <-tbl[1:10]
+
+# Add current polling data and color format for HTML
+tbl <- cbind.data.frame(tbl,
+                        election_vote=c('D +20.6', 
+                                          'R +4.6', 
+                                          'R +4.6', 
+                                          'D +20.6', 
+                                          'R +1.1', 
+                                          'R +9.3', 
+                                          'D +4.6', 
+                                          'D +20.6', 
+                                          'R +8.9', 
+                                          'D +20.6'), 
+                        election_vote_color=c('#2597e9',
+                                                '#ff9d8b',
+                                                '#ff9d8b',
+                                                '#2597e9',
+                                                '#ffd6cc',
+                                                '#ff6e5d',
+                                                '#85baf1',
+                                                '#2597e9',
+                                                '#ff6e5d',
+                                                '#2597e9'))
+
 # Create HTML code
 html <- NULL
 html <- "
@@ -224,9 +249,9 @@ html <- "
 <tr style='height: 14px !important;'>
 <th style='text-align: left' class='c0 '>Rank</th>
 <th style='text-align: left' class='c1 '>City</th>
-<th style='text-align: left' class='c2 '>Share of Single-Mom Households</th>
 <th style='text-align: left' class='c3 '>Share of Single-Mom Households<br/>Percent Change (2012-15)</th>
-<th style='text-align: left' class='c4 '>Median Sale Price<br/>July 2016</th>
+<th style='text-align: left' class='c2 '>Share of Single-Mom Households</th>
+<th style='text-align: left' class='c4 '>State Vote<br/>in Previous Election</th>
 </tr>
 </thead>
 <tbody>"
@@ -237,15 +262,10 @@ for (i in 1:10) {
                    <tr class=''>
                    <td style='text-align: left' class='c0 '>", tbl[i, 1, with = FALSE], "</td>
                    <td style='text-align: left' class='c1 '><a href=https://www.redfin.com/city/", tbl[i, 3, with = FALSE], "/?utm_source=blog&utm_medium=post&utm_content=real_estate&utm_campaign=1002170'>", tbl[i, 2, with = FALSE], "</a></td>
-                    <td style='text-align: left' class='c2 '>", paste0(tbl[i, 6, with = FALSE], "%"), "</td>                   
-                    <td style='text-align: left' class='c3 '>", paste0(tbl[i, 4, with = FALSE], "%"), "</td>
-                   <td style='text-align: left' class='c4 '>",
-                        if(!is.na(tbl[i, 5, with = FALSE])){
-                            paste0("$", prettyNum(tbl[i, 5, with = FALSE], big.mark = ",", scientific = FALSE))
-                        }else{
-                            tbl[i, 5, with = FALSE]
-                        }, "
-                   </td></tr>"
+                <td style='text-align: left' class='c3 '>", paste0(tbl[i, 4, with = FALSE], "%"), "</td>                
+                <td style='text-align: left' class='c2 '>", paste0(tbl[i, 6, with = FALSE], "%"), "</td>                  
+                   <td style='text-align: left;background-color:",tbl[i, 8, with = FALSE],";' class='c4 '>",tbl[i, 7, with = FALSE],"</td>
+                   </tr>"
                    )
 }
 
@@ -255,9 +275,9 @@ html <- paste0(html, "
                 <tr style='border-top:1px solid black' class=''>
                <td style='text-align: left' class='c0 '></td>
                <td style='text-align: left' class='c1 '><a href=https://www.redfin.com/?utm_source=blog&utm_medium=post&utm_content=real_estate&utm_campaign=1002170'><b>National</b></a></td>
-            <td style='text-align: left' class='c2 '>", round(100*summary_natl$natl_share_single_moms[1],1),"%" ,"</td>
-            <td style='text-align: left;color:red;' class='c3 '>", round(100*summary_natl$percentage_change_single_mom[1],1),"%" ,"</td>
-               <td style='text-align: left' class='c4 '>$274,000</td>
+                <td style='text-align: left;color:red;' class='c3 '>", round(100*summary_natl$percentage_change_single_mom[1],1),"%" ,"</td>            
+                <td style='text-align: left' class='c2 '>", round(100*summary_natl$natl_share_single_moms[1],1),"%" ,"</td>
+               <td style='text-align: left' class='c4 '></td>
                </tr>"
 )
 
@@ -267,72 +287,4 @@ html <- gsub("\\n", "", html)
 
 # Save final HTML output
 write.table(html, "cities_with_increase_in_single_moms.html", col.names = FALSE, row.names = FALSE, quote = FALSE)
-
-##################################################
-# Repeat for share of families
-
-# Data used for creating HTML tables of top 10
-tbl <- final_output_families %>%
-    arrange(desc(percentage_change_parents)) %>%
-    mutate(ranking = rank(desc(percentage_change_parents))) %>%
-    dplyr::select(ranking, city, table_id, percentage_change_parents, median_sale_price, percent_parents_15) %>%
-    mutate(percentage_change_parents = round(percentage_change_parents*100,1),
-           percent_parents_15 = round(percent_parents_15*100,1))
-
-
-setDT(tbl)
-
-# Create HTML code
-html <- NULL
-html <- "
-<h3>Cities with the Largest Increase in Share of Family Households</h3>
-<table class='ScienceTable' style = 'font-size: 14px;'>
-<thead>
-<tr style='height: 14px !important;'>
-<th style='text-align: left' class='c0 '>Rank</th>
-<th style='text-align: left' class='c1 '>City</th>
-<th style='text-align: left' class='c2 '>Share of Family Households</th>
-<th style='text-align: left' class='c3 '>Share of Family Households<br/>Percent Change (2012-15)</th>
-<th style='text-align: left' class='c4 '>Median Sale Price<br/>July 2016</th>
-</tr>
-</thead>
-<tbody>"
-
-# loop through top 10 writing HTML code
-for (i in 1:10) {
-    html <- paste0(html, "
-                   <tr class=''>
-                   <td style='text-align: left' class='c0 '>", tbl[i, 1, with = FALSE], "</td>
-                   <td style='text-align: left' class='c1 '><a href=https://www.redfin.com/city/", tbl[i, 3, with = FALSE], "/?utm_source=blog&utm_medium=post&utm_content=real_estate&utm_campaign=1002170'>", tbl[i, 2, with = FALSE], "</a></td>
-                   <td style='text-align: left' class='c2 '>", paste0(tbl[i, 6, with = FALSE], "%"), "</td>                   
-                   <td style='text-align: left' class='c3 '>", paste0(tbl[i, 4, with = FALSE], "%"), "</td>
-                   <td style='text-align: left' class='c4 '>",
-                   if(!is.na(tbl[i, 5, with = FALSE])){
-                       paste0("$", prettyNum(tbl[i, 5, with = FALSE], big.mark = ",", scientific = FALSE))
-                   }else{
-                       tbl[i, 5, with = FALSE]
-                   }, "
-                   </td></tr>"
-    )
-    }
-
-# Add national numbers
-# National median sale price from Redfin Data Center
-html <- paste0(html, "
-               <tr style='border-top:1px solid black' class=''>
-               <td style='text-align: left' class='c0 '></td>
-               <td style='text-align: left' class='c1 '><a href=https://www.redfin.com/?utm_source=blog&utm_medium=post&utm_content=real_estate&utm_campaign=1002170'><b>National</b></a></td>
-               <td style='text-align: left' class='c2 '>", round(100*summary_natl$natl_share_parents[1],1),"%" ,"</td>
-               <td style='text-align: left;color:red;' class='c3 '>", round(100*summary_natl$percentage_change_parents[1],1),"%" ,"</td>
-               <td style='text-align: left' class='c4 '>$274,000
-               </td></tr>"
-)
-
-html <- paste0(html, "</tbody></table>")
-
-html <- gsub("\\n", "", html)
-
-# Save final HTML output
-write.table(html, "cities_with_increase_in_families.html", col.names = FALSE, row.names = FALSE, quote = FALSE)
-
 
